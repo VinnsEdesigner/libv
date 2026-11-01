@@ -1,0 +1,2 @@
+v device legacy-device
+v sig hmac-sha256 e537dbcb4be80b831c5cad3812c9b5b798afca1603d4adf3e4781975e9f571dd

@@ -1,0 +1,79 @@
+# libv gate — both implementations must pass the same vectors.
+#
+# This is the point of the repository. The canonical string that gets signed is
+# produced by each implementation, so a one-byte disagreement makes signatures
+# stop verifying. Running both against the same files in CI is what catches that
+# here rather than on a device.
+name: gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  go:
+    name: Go
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: go
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Format check
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./... -count=1
+
+  kotlin:
+    name: Kotlin
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kotlin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Test
+        run: ./gradlew test --no-daemon
+
+  vectors:
+    name: Vectors are current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      # Regenerating must produce the committed files. A diff means a vector was
+      # hand-edited, or the format changed without regenerating — either way the
+      # two implementations are no longer testing the same thing.
+      - name: Regenerate and compare
+        run: |
+          cp -r vectors /tmp/vectors-committed
+          (cd go && go run ./cmd/genvectors ../vectors)
+          # The keypair is regenerated, so compare everything except the keys and
+          # the signatures that depend on them.
+          if ! diff -q /tmp/vectors-committed/02_full.canonical vectors/02_full.canonical; then
+            echo "the canonical form of 02_full changed — regenerate and commit"
+            exit 1
+          fi
+          echo "canonical form is stable"
