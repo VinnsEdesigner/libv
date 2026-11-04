@@ -4,8 +4,9 @@
 # with its own build, so JitPack's default "build the root project" finds nothing.
 # The published artifact is the Kotlin/JVM library, which lives under kotlin/.
 #
-# JitPack builds from a git tag. The Android consumer depends on
-# com.github.VinnsEdesigner.libv:libv:<tag>.
+# JitPack builds from a git tag and serves the result under com.github.<owner>,
+# with the repository name as the artifactId:
+#   com.github.VinnsEdesigner:libv:<tag>
 jdk:
   - openjdk21
 install:

@@ -34,15 +34,16 @@ tasks.test {
 }
 
 // Publishing exists for one consumer: the Android device, which adds this as
-// `com.github.VinnsEdesigner.libv:libv:<tag>` from JitPack. JitPack builds from a
-// git tag and reads the coordinates from this publication, so the groupId must be
-// the JitPack coordinate — `com.github.<owner>.<repo>` — not the source package
-// (`com.vyzorix.libv`). Getting that wrong produces an artifact nothing can
-// resolve, which is silent until a consumer build fails.
+// `com.github.VinnsEdesigner:libv:<tag>` from JitPack. JitPack builds from a git
+// tag and serves the artifact under `com.github.<owner>` with the repository name
+// as the artifactId — it rewrites the groupId to that, so a publication group of
+// `com.github.<owner>.<repo>` would resolve nowhere. Matching JitPack's own
+// coordinate here keeps a local `publishToMavenLocal` resolving the same way a
+// JitPack fetch does, so the two paths cannot disagree.
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            groupId = "com.github.VinnsEdesigner.libv"
+            groupId = "com.github.VinnsEdesigner"
             artifactId = "libv"
             // The tag drives the version on JitPack; locally it is a placeholder.
             version = "1.0.0"
