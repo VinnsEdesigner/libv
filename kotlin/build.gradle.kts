@@ -6,6 +6,7 @@
 // with any pure-Kotlin dependency.
 plugins {
     kotlin("jvm") version "1.9.23"
+    `maven-publish`
 }
 
 repositories {
@@ -30,4 +31,22 @@ tasks.test {
     // The vectors live at the repo root; the test reads them relative to the
     // module, so run from the module directory.
     workingDir = file("${projectDir}")
+}
+
+// Publishing exists for one consumer: the Android device, which adds this as
+// `com.github.VinnsEdesigner.libv:libv:<tag>` from JitPack. JitPack builds from a
+// git tag and reads the coordinates from this publication, so the groupId must be
+// the JitPack coordinate — `com.github.<owner>.<repo>` — not the source package
+// (`com.vyzorix.libv`). Getting that wrong produces an artifact nothing can
+// resolve, which is silent until a consumer build fails.
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.github.VinnsEdesigner.libv"
+            artifactId = "libv"
+            // The tag drives the version on JitPack; locally it is a placeholder.
+            version = "1.0.0"
+            from(components["java"])
+        }
+    }
 }
